@@ -34,6 +34,11 @@ test('SUDERN complete workflow on separate PostgreSQL database',async()=>{
  const instance=await start(0);server=instance.server;host='http://127.0.0.1:'+instance.port;
  try{
   const health=await request('/api/health');assert.equal(health.status,200);assert.equal(health.data.schema_version,2);
+  process.env.VERCEL_ENV='preview';
+  const config=await request('/api/public/config');
+  assert.equal(config.status,200);
+  assert.equal(config.data.environment,'preview','Preview must not falsely report production merely because NODE_ENV is optimized');
+  delete process.env.VERCEL_ENV;
   for(const role of ['admin','director','finance_officer','programme_officer','mel_officer','viewer'])await createStaff(role);
   const auth={};for(const role of Object.keys(people))auth[role]=await sign(role);
   // Fresh password challenge cannot reuse the TOTP already consumed during this time-step.
