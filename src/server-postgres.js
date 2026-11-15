@@ -29,7 +29,7 @@ async function body(req){
 }
 function roles(session,...allowed){if(!session)fail(401,'Sign in required');if(!allowed.includes(session.role))fail(403,'Insufficient permissions');}
 function throttle(req,store,limit=12,windowMs=15*60_000){
- const key=(req.socket.remoteAddress||'unknown');const t=Date.now(),item=store.get(key)||{n:0,since:t};
+ const endpoint=(req.url||'').split('?')[0];const key=(req.socket?.remoteAddress||'unknown')+':'+endpoint;const t=Date.now(),item=store.get(key)||{n:0,since:t};
  if(t-item.since>windowMs){item.n=0;item.since=t}item.n++;store.set(key,item);
  if(item.n>limit)fail(429,'Too many attempts. Please try again later.');
  if(store.size>5000) for(const [k,v] of store) if(t-v.since>windowMs)store.delete(k);
