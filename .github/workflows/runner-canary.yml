@@ -1,0 +1,14 @@
+name: SUDERN runner availability canary
+on:
+  push:
+    branches: ['agent/**', main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runner-ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verify runner allocated
+        run: echo "SUDERN_GITHUB_RUNNER_ALLOCATED=PASS"

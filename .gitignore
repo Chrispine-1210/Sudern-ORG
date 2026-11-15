@@ -1,0 +1,17 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.vercel/
+coverage/
+*.db
+*.db-wal
+*.db-shm
+data/
+.DS_Store
+*.log
+.sandbox/
+*.dump
+*.dump.aesgcm
+*.partial-*
+.DS_Store

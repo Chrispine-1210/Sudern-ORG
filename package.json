@@ -1,0 +1,28 @@
+{
+  "name": "sudern-institutional-platform",
+  "version": "0.3.3",
+  "private": true,
+  "description": "SUDERN institutional operations, PostgreSQL + privileged MFA gated candidate (production HOLD)",
+  "scripts": {
+    "start": "node src/entry.js",
+    "test": "node --test tests/*.test.js",
+    "check": "node --check src/entry.js && node --check src/server-postgres.js && node --check src/pg-db.js && node --check src/pg-security.js && node --check src/mfa.js && node --check public/portal.js && node --check public/app.js && node --check public/apply.js",
+    "create-admin": "node scripts/create-admin.js",
+    "seed:sandbox": "node scripts/seed-sandbox.js",
+    "start:pg": "node src/server-postgres.js",
+    "migrate:pg": "node scripts/migrate-postgres.js",
+    "create-admin:pg": "node scripts/create-admin-postgres.js",
+    "test:unit": "node --test tests/unit-*.test.js",
+    "test:postgres": "node scripts/run-postgres-tests.js",
+    "verify:postgres": "node scripts/verify-postgres.js",
+    "secure-backup": "node scripts/secure-pg-backup.js",
+    "preview:smoke": "node scripts/preview-smoke.js",
+    "verify:manifest": "node scripts/verify-build-manifest.js"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "pg": "8.23.1"
+  }
+}
