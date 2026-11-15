@@ -50,7 +50,7 @@ async function handleApi(db,req,res,url,requestBody,session){
   if(!version)return json(res,503,{status:'migration_pending',service:'sudern-platform',production_authorized:false});
   return json(res,200,{status:'ok',service:'sudern-platform',database:'postgresql',schema_version:version.version,commit_sha:process.env.VERCEL_GIT_COMMIT_SHA||null,production_authorized:false,time:now()});
  }
- if(pathname==='/api/public/config'&&method==='GET')return json(res,200,{intake_enabled:process.env.INTAKE_ENABLED==='true',environment:process.env.NODE_ENV==='production'?'production':'local'});
+ if(pathname==='/api/public/config'&&method==='GET')return json(res,200,{intake_enabled:process.env.INTAKE_ENABLED==='true',environment:process.env.VERCEL_ENV || (process.env.NODE_ENV==='production'?'production':'local')});
  if(pathname==='/api/public/programmes'&&method==='GET')return json(res,200,{items:(await all(db,'SELECT id,code,name,focus,description,state FROM programmes ORDER BY CASE id WHEN \'tech\' THEN 1 WHEN \'finance\' THEN 2 ELSE 3 END'))});
  if(pathname==='/api/public/opportunities'&&method==='GET')return json(res,200,{items:(await all(db,"SELECT id,category,title,description FROM opportunities WHERE status='active' ORDER BY created_at DESC LIMIT 30"))});
  if(pathname==='/api/public/applications'&&method==='POST'){
