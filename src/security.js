@@ -23,4 +23,16 @@ function readSession(c,req){
  const m=(req.headers.cookie||'').match(/(?:^|;\s*)sudern_session=([^;]+)/);
  if(!m)return null;
  const hash=crypto.createHash('sha256').update(m[1]).digest('hex');
- const session=c.prepare(`SELECT s.*,u.id AS uid,u.name,u.email,u.role,u.active FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AN¶»§q«^
+ const session=c.prepare(`SELECT s.*,u.id AS uid,u.name,u.email,u.role,u.active FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND u.active=1`).get(hash,new Date().toISOString());
+ return session?{...session,token_hash:hash}:null;
+}
+function cookie(token,secure){return `sudern_session=${token}; HttpOnly; Path=/; SameSite=Strict; Max-Age=28800${secure?'; Secure':''}`;}
+function clearCookie(secure){return `sudern_session=; HttpOnly; Path=/; SameSite=Strict; Max-Age=0${secure?'; Secure':''}`;}
+function isAllowedOrigin(req){
+ const origin=req.headers.origin;
+ if(!origin)return true;
+ try { const parsed=new URL(origin);const expected=req.headers.host;
+   return parsed.host===expected && ['http:','https:'].includes(parsed.protocol);
+ } catch{return false;}
+}
+module.exports={hashPassword,checkPassword,createSession,readSession,cookie,clearCookie,isAllowedOrigin};
