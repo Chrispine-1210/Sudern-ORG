@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.vercel/
+*.log
+*.sqlite
+*.db
+*.dump
+*.bak
+*.aesgcm
+coverage/
+test-results/
+playwright-report/

@@ -1,0 +1,98 @@
+name: SUDERN isolated quality and database gates
+on:
+  push:
+    branches: [main, 'agent/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sudern-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Reproducible dependency install
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Syntax
+        run: npm run check
+      - name: Privileged MFA and production-hold tests
+        run: node --test tests/unit-*.test.js
+      - name: Production dependency audit
+        run: npm audit --omit=dev --audit-level=high
+
+  isolated-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sudern_ci
+          POSTGRES_PASSWORD: synthetic_ci_not_a_production_credential
+          POSTGRES_DB: sudern_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U sudern_ci -d sudern_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      DATABASE_URL: postgresql://sudern_ci:synthetic_ci_not_a_production_credential@localhost:5432/sudern_ci
+      CI: 'true'
+      PG_CONTAINER: ${{ job.services.postgres.id }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Apply migrations and exercise isolated governance/financing checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          export MFA_ENCRYPTION_KEY="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("base64"))')"
+          node tests/pg-ci.js
+      - name: Restore database independently to empty PostgreSQL target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${PG_CONTAINER:?PostgreSQL service container missing}"
+          dump="$RUNNER_TEMP/sudern-ci.dump"
+          trap 'rm -f "$dump"' EXIT
+          docker exec "$PG_CONTAINER" pg_dump -U sudern_ci -d sudern_ci -Fc > "$dump"
+          docker exec "$PG_CONTAINER" createdb -U sudern_ci sudern_restore
+          cat "$dump" | docker exec -i "$PG_CONTAINER" pg_restore -U sudern_ci -d sudern_restore --no-owner --no-privileges --exit-on-error
+          query="SELECT json_build_object('users',(SELECT count(*) FROM users),'funds',(SELECT count(*) FROM funds),'expenses',(SELECT count(*) FROM expenses),'audit_tip',(SELECT event_hash FROM audit ORDER BY seq DESC LIMIT 1))::text"
+          original="$(docker exec "$PG_CONTAINER" psql -U sudern_ci -d sudern_ci -Atc "$query")"
+          restored="$(docker exec "$PG_CONTAINER" psql -U sudern_ci -d sudern_restore -Atc "$query")"
+          test "$original" = "$restored"
+          docker exec "$PG_CONTAINER" psql -U sudern_ci -d sudern_restore -Atc "SELECT count(*) FROM schema_migrations" | grep -qx '2'
+          echo "PASS: independent empty-target PostgreSQL restore retains synthetic records, migrations and audit tip."
+
+  preview-gate:
+    if: github.event_name == 'workflow_dispatch'
+    needs: [quality, isolated-postgres]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: sudern-preview-approval
+    steps:
+      - name: Preview gate configuration
+        env:
+          PREVIEW_URL: ${{ vars.SUDERN_PREVIEW_URL }}
+          EXPECTED_SHA: ${{ github.sha }}
+          BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$PREVIEW_URL" || { echo "Missing protected Preview URL"; exit 1; }
+          test -n "$BYPASS" || { echo "Missing protected Preview automation bypass"; exit 1; }
+          echo "Preview gated at commit $EXPECTED_SHA; authenticated application E2E requires separate configured staff fixture."
