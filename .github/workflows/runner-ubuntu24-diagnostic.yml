@@ -1,0 +1,16 @@
+name: SUDERN Ubuntu 24.04 Runner Allocation Diagnostic
+on:
+  push:
+    branches: [diagnostic/sudern-ubuntu24-runner]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ubuntu24-ping:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Emit runner allocation evidence
+        run: |
+          echo 'SUDERN_UBUNTU24_RUNNER_ALLOCATED=PASS'
+          uname -a
