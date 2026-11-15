@@ -57,7 +57,7 @@
     "src/pg-db.js": "8295fc0daa4efb89db5012feeca6f584b4a027715128696d3994946bfdf2573f",
     "src/pg-security.js": "a3e64a7791342b30ed4409c3e96cb42fb0886ab4b36d2ac54f013f613c14042b",
     "src/security.js": "7dd65bb574bf637b66f66d0df25b0d36a902cc38ba39cf192bb010857990a060",
-    "src/server-postgres.js": "45808b30460d365791a22585d893d0b14c8890e745214dc1dae5aa2c207292a3",
+    "src/server-postgres.js": "670ec0cff66045b0af6d78c81162bc7ea8543ed5ed707a629f9db1cd32cf3026",
     "src/server.js": "7fbdebc35efe89f8a7ac270999a46ab1a5b62023fb6ee97e3cb3e06db3c46e90",
     "tests/browser-check.py": "363f06a99cc64f795bb72a4b9acefeb6e8984505145ebf96de031cd0274a2ad2",
     "tests/platform.test.js": "6eb88bf61390a262ea0f89fa124c7b2a396b776918c5378e8532b959a2076962",
