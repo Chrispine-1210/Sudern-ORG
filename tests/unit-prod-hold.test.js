@@ -4,6 +4,8 @@ const handler=require('../api/index');
 test('Production target refuses requests without explicit authorisation',async()=>{
  const prev={...process.env};
  try{
+  // Never let mocked release-gate tests reach a connected Preview or production database.
+  delete process.env.DATABASE_URL;delete process.env.MFA_ENCRYPTION_KEY;
   process.env.VERCEL_ENV='production';delete process.env.SUDERN_PRODUCTION_AUTHORIZED;
   const res={statusCode:200,headers:{},setHeader(k,v){this.headers[k]=v},end(body){this.body=body}};
   await handler({},res);
@@ -12,7 +14,7 @@ test('Production target refuses requests without explicit authorisation',async()
   const preview={statusCode:200,headers:{},setHeader(k,v){this.headers[k]=v},end(body){this.body=body}};
   await handler({},preview);
   assert.equal(preview.statusCode,503);assert.equal(preview.body,'Configuration pending');
- }finally{for(const k of ['VERCEL_ENV','SUDERN_PRODUCTION_AUTHORIZED']){if(prev[k]===undefined)delete process.env[k];else process.env[k]=prev[k]}}
+ }finally{for(const k of ['VERCEL_ENV','SUDERN_PRODUCTION_AUTHORIZED','DATABASE_URL','MFA_ENCRYPTION_KEY']){if(prev[k]===undefined)delete process.env[k];else process.env[k]=prev[k]}}
 });
 
 test('Malformed privileged MFA key fails closed before PostgreSQL access',async()=>{
