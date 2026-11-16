@@ -65,7 +65,7 @@
     "tests/unit-backup.test.js": "6df49c0593a78384cba8cfa0455141bdaac230f2087a95396cd31ec2e322f4f1",
     "tests/unit-mfa.test.js": "a72b0bae021ab74d499d610e61f29bc5c79989019108af9001d1a1ea84e8b5ac",
     "tests/unit-postgres-contract.test.js": "ae30f8ad1a72d23161e8cbdc1236bc40e703364ec6f40d87edc529d72e81d30a",
-    "tests/unit-prod-hold.test.js": "2803299f92d0f7bdd60b4354cc768c7a666c0a43027a37034cfe589b0546908a",
+    "tests/unit-prod-hold.test.js": "1009c25d954ef8218fbb903a9d4749aab4467416baff5cb9b2241c34c650a100",
     "vercel.json": "58426ef13f02b18d2922de241d115f83f03d4ec97d4c9f18493976a18882073d"
   }
 }
