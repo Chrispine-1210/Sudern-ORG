@@ -20,7 +20,7 @@
     "verify:manifest": "node scripts/verify-build-manifest.js"
   },
   "engines": {
-    "node": ">=22.13.0"
+    "node": "24.x"
   },
   "dependencies": {
     "pg": "8.23.1"
